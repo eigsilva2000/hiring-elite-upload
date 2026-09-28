@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hiring Elite — Document Portal</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0a0a;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1.5rem;
+    }
+    .logo-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    .logo-row img { height: 80px; object-fit: contain; }
+    .logo-text {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      color: #888;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+    .card {
+      background: #141414;
+      border: 0.5px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 460px;
+    }
+    .divider { width: 40px; height: 2px; background: #c0392b; margin: 0 auto 1.25rem; }
+    .card-title { font-size: 18px; font-weight: 500; color: #fff; margin-bottom: 4px; text-align: center; }
+    .card-sub { font-size: 13px; color: #666; margin-bottom: 1.5rem; text-align: center; }
+    .card-header { border-bottom: 0.5px solid #222; padding-bottom: 1.25rem; margin-bottom: 1rem; }
+    label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 6px;
+      margin-top: 1rem;
+    }
+    .file-zone {
+      width: 100%;
+      margin-top: 1rem;
+      border: 0.5px dashed #333;
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border 0.2s;
+      background: #0a0a0a;
+    }
+    .file-zone:hover { border-color: #c0392b; }
+    .file-zone-text { font-size: 13px; color: #555; }
+    .file-zone-text span { color: #c0392b; }
+    .file-list { margin-top: 10px; text-align: left; }
+    .file-list-item { font-size: 12px; color: #888; padding: 4px 0; border-bottom: 0.5px solid #1e1e1e; }
+    .file-list-item:last-child { border-bottom: none; }
+    #file-input { display: none; }
+    .btn {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 13px;
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #a93226; }
+    .btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+    .progress-wrap { margin-top: 1.25rem; display: none; }
+    .progress-track { width: 100%; height: 3px; background: #222; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #c0392b; width: 0%; transition: width 0.3s; }
+    .status { font-size: 12px; color: #666; margin-top: 8px; text-align: center; }
+    .footer-logo { text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid #222; }
+    .footer-logo img { height: 20px; opacity: 0.4; object-fit: contain; }
+  </style>
+</head>
+<body>
+  <div class="logo-row">
+    <img src="https://raw.githubusercontent.com/eigsilva2000/Call-Audit-Forms/main/public/2.png" alt="Hiring Elite">
+    <div class="logo-text">Document Portal</div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="divider"></div>
+      <div class="card-title">Upload Documents</div>
+      <div class="card-sub">Secure upload — files go directly to your firm's folder.</div>
+    </div>
+
+    <label>Files</label>
+    <div class="file-zone" onclick="document.getElementById('file-input').click()">
+      <div class="file-zone-text">Drop files here or <span>browse</span></div>
+      <div class="file-list" id="file-list"></div>
+    </div>
+    <input type="file" id="file-input" multiple>
+
+    <button class="btn" id="submit-btn" onclick="uploadFile()">Submit Documents</button>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="status" id="status">Uploading...</div>
+    </div>
+
+    <div class="footer-logo">
+      <img src="https://www.8figurefirm.com/wp-content/uploads/2021/09/logo-white.png" alt="8 Figure Firm">
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('file-input').addEventListener('change', function () {
+      const list = document.getElementById('file-list');
+      list.innerHTML = '';
+      for (const f of this.files) {
+        const div = document.createElement('div');
+        div.className = 'file-list-item';
+        div.textContent = f.name;
+        list.appendChild(div);
+      }
+    });
+
+    async function uploadFile() {
+      const files = document.getElementById('file-input').files;
+      const btn = document.getElementById('submit-btn');
+
+      if (files.length === 0) {
+        alert('Please select at least one file.');
+        return;
+      }
+
+      btn.disabled = true;
+      document.getElementById('progress-wrap').style.display = 'block';
+      document.getElementById('status').textContent = 'Preparing upload...';
+
+      const fileList = Array.from(files).map(f => ({
+        name: f.name,
+        type: f.type || 'application/octet-stream',
+        size: f.size,
+      }));
+
+      let uploadUrls;
+      try {
+        const initRes = await fetch(window.location.pathname + '/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ files: fileList }),
+        });
+        const data = await initRes.json();
+        if (!initRes.ok) throw new Error(data.error || 'Init failed.');
+        uploadUrls = data.uploadUrls;
+      } catch (err) {
+        document.getElementById('status').textContent = 'Failed to start upload. Please try again.';
+        btn.disabled = false;
+        return;
+      }
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const { uploadUrl } = uploadUrls[i];
+
+        document.getElementById('status').textContent = `Uploading ${i + 1} of ${files.length}: ${file.name}`;
+
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', uploadUrl);
+          xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+              const pct = Math.round(e.loaded / e.total * 100);
+              document.getElementById('progress-fill').style.width = pct + '%';
+              document.getElementById('status').textContent = `Uploading file ${i + 1} of ${files.length}: ${pct}%`;
+            }
+          };
+
+          xhr.onload = () => resolve();
+          xhr.onerror = () => resolve();
+          xhr.send(file);
+        });
+      }
+
+      document.getElementById('status').textContent = 'Verifying uploads...';
+
+      let allConfirmed = true;
+      for (let i = 0; i < files.length; i++) {
+        const confirmRes = await fetch(window.location.pathname + '/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName: files[i].name }),
+        });
+        const confirmData = await confirmRes.json();
+        if (!confirmData.confirmed) allConfirmed = false;
+      }
+
+      document.getElementById('progress-fill').style.width = '100%';
+      if (allConfirmed) {
+        document.getElementById('status').textContent = 'Upload complete. Thank you!';
+      } else {
+        document.getElementById('status').textContent = 'Some files may not have uploaded correctly. Please check with your coordinator.';
+      }
+      btn.disabled = false;
+    }
+  </script>
+</body>
+</html>
